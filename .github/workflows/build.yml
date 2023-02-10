@@ -20,9 +20,7 @@ jobs:
         sudo apt install xsel xclip -y
     - name: Set up requirements on windows-latest
       if: ${{ matrix.os == 'windows-latest' }}
-      run: |
-        set PATH
-        dir C:\mingw64\bin
+      run: echo windows-latest
     - name: Set up requirements on macos-latest
       if: ${{ matrix.os == 'macos-latest' }}
       run: echo macos-latest
