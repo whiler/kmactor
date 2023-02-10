@@ -7,7 +7,7 @@ TAGS ?= dev
 GOFLAGS ?= -race -v
 GOLDFLAGS ?= -X main.buildRevision=$(DT).$(REV)
 
-.PHONY: all amd64 arm64 win build linux release tidy updep
+.PHONY: all amd64 arm64 win mingw build linux release tidy updep
 
 build:
 	go build $(GOFLAGS) -ldflags "$(GOLDFLAGS)" -tags="$(TAGS)" -o $(ARTIFACT) cmd/*.go
@@ -26,6 +26,9 @@ arm64:
 
 win:
 	EXT=.exe GOOS=windows $(MAKE) release
+
+mingw:
+	EXT=.exe GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ $(MAKE) release
 
 tidy: go.mod
 	go mod tidy
