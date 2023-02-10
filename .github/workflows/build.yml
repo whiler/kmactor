@@ -1,0 +1,19 @@
+name: build
+
+on:
+  push:
+    branches: [ "wip" ]
+  pull_request:
+    branches: [ "wip" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+    - name: Build
+      run: make
