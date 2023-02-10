@@ -9,6 +9,21 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
+    - name: Set up requirements on ubuntu-latest
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: |
+        sudo apt update -y
+        sudo apt install gcc libc6-dev
+        sudo apt install libx11-dev xorg-dev libxtst-dev
+        sudo apt install libpng++-dev
+        sudo apt install xcb libxcb-xkb-dev x11-xkb-utils libx11-xcb-dev libxkbcommon-x11-dev libxkbcommon-dev
+        sudo apt install xsel xclip
+    - name: Set up requirements on windows-latest
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: echo windows-latest
+    - name: Set up requirements on macos-latest
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: echo macos-latest
     - uses: actions/checkout@v3
     - name: Set up Go
       uses: actions/setup-go@v3
