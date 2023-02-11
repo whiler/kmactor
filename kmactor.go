@@ -29,7 +29,7 @@ func (self *kmactor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			count := 0
 			cmd := Command{}
 			log.Println("connected")
-			defer func() { log.Printf("handled %d/%d\r\n", handled, count) }()
+			defer func() { log.Printf("handled %d/%d", handled, count) }()
 			for {
 				cmd.Reset()
 				if err = conn.ReadJSON(&cmd); err != nil {
@@ -39,6 +39,8 @@ func (self *kmactor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 				count += 1
 			}
+		} else {
+			log.Println("refused")
 		}
 	}
 }
