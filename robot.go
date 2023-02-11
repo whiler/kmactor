@@ -1,8 +1,6 @@
 package kmactor
 
 import (
-	"fmt"
-
 	"github.com/go-vgo/robotgo"
 )
 
@@ -14,8 +12,9 @@ const (
 	KeyPress = 2
 	KeyUp    = 3
 
-	MouseMove  = 1
-	MouseClick = 2
+	MouseMove = 1
+	MouseDown = 2
+	MouseUp   = 3
 
 	MouseKeyLeft   = 0
 	MouseKeyCenter = 1
@@ -114,39 +113,6 @@ func (self *Command) Reset() {
 	self.Key = 0
 }
 
-func (self *Command) String() string {
-	var key string
-	var action string
-	switch self.Major {
-	case MajorKey:
-		if key = keyboard[self.Key]; key != "" {
-			switch self.Type {
-			case KeyDown:
-				action = "down"
-			case KeyPress:
-				action = "press"
-			case KeyUp:
-				action = "up"
-			}
-			if action != "" {
-				return fmt.Sprintf("key %s %s", key, action)
-			}
-		}
-	case MajorMouse:
-		switch self.Type {
-		case MouseMove:
-			if self.Position != nil && self.Size != nil && self.Size.Width > 0 && self.Size.Height > 0 {
-				return fmt.Sprintf("mouse move (%d, %d)", self.Position.Left*width/self.Size.Width, self.Position.Top*height/self.Size.Height)
-			}
-		case MouseClick:
-			if key = mouse[self.Key]; key != "" {
-				return fmt.Sprintf("mouse click %s", key)
-			}
-		}
-	}
-	return "unknown"
-}
-
 type Size struct {
 	Width  int `json:"w"`
 	Height int `json:"h"`
@@ -182,9 +148,14 @@ func Play(cmd *Command) bool {
 				robotgo.Move(cmd.Position.Left*width/cmd.Size.Width, cmd.Position.Top*height/cmd.Size.Height)
 				handled = true
 			}
-		case MouseClick:
+		case MouseDown:
 			if key = mouse[cmd.Key]; key != "" {
-				robotgo.Click(key)
+				robotgo.Toggle(key, "down")
+				handled = true
+			}
+		case MouseUp:
+			if key = mouse[cmd.Key]; key != "" {
+				robotgo.Toggle(key, "up")
 				handled = true
 			}
 		}
