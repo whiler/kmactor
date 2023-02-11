@@ -1,16 +1,15 @@
-DT := $(shell date +%Y%U)
 REV := $(shell git rev-parse --short HEAD)
 APP := $(shell basename $(CURDIR))
 ARTIFACT := bin/$(APP)$(EXT)
 
 TAGS ?= dev
 GOFLAGS ?= -race -v
-GOLDFLAGS ?= -X main.buildRevision=$(DT).$(REV)
+GOLDFLAGS ?= -X main.buildRevision=$(REV)
 
 .PHONY: all amd64 arm64 win mingw build linux release tidy updep
 
 build:
-	go build $(GOFLAGS) -ldflags "$(GOLDFLAGS)" -tags="$(TAGS)" -o $(ARTIFACT) cmd/*.go
+	go build $(GOFLAGS) -ldflags "$(GOLDFLAGS)" -tags="$(TAGS)" -o $(ARTIFACT) cmd/main.go
 
 release:
 	GOFLAGS="-trimpath" GOLDFLAGS="$(GOLDFLAGS) -s -w" TAGS="release" $(MAKE) build
