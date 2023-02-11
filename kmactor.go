@@ -27,6 +27,7 @@ func (self *kmactor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			defer self.count.CompareAndSwap(1, 0)
 			handled := 0
 			count := 0
+			width, height := GetScreenSize()
 			cmd := Command{}
 			log.Println("connected")
 			defer func() { log.Printf("handled %d/%d", handled, count) }()
@@ -34,7 +35,7 @@ func (self *kmactor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				cmd.Reset()
 				if err = conn.ReadJSON(&cmd); err != nil {
 					break
-				} else if Play(&cmd) {
+				} else if Play(&cmd, width, height) {
 					handled += 1
 				}
 				count += 1
