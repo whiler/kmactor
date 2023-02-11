@@ -24,7 +24,7 @@ arm64:
 	EXT=.aarch64 GOARCH=arm64 $(MAKE) linux
 
 win:
-	go build -trimpath -ldflags "$(GOLDFLAGS) -s -w" -tags=release -o $(ARTIFACT) cmd/main.go
+	go build -trimpath -ldflags "$(GOLDFLAGS) -s -w" -tags=release -o bin/kmactor.exe cmd/main.go
 
 mingw:
 	EXT=.exe GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ $(MAKE) release
