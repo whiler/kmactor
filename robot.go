@@ -164,6 +164,5 @@ func Play(cmd *Command) bool {
 }
 
 func Initialize() {
-	robotgo.MilliSleep(100)
 	width, height = robotgo.GetScreenSize()
 }
