@@ -1,14 +1,15 @@
+DT := $(shell date +%Y%U)
 REV := $(shell git rev-parse --short HEAD)
 APP := $(shell basename $(CURDIR))
 ARTIFACT := bin/$(APP)$(EXT)
 
 TAGS ?= dev
 GOFLAGS ?= -race -v
-GOLDFLAGS ?= -X main.buildRevision=$(REV)
+GOLDFLAGS ?= -X main.buildRevision=$(DT).$(REV)
 
 .PHONY: all amd64 arm64 win mingw build linux release tidy updep
 
-build:
+build: tidy
 	go build $(GOFLAGS) -ldflags "$(GOLDFLAGS)" -tags="$(TAGS)" -o $(ARTIFACT) cmd/main.go
 
 release:
@@ -24,10 +25,7 @@ arm64:
 	EXT=.aarch64 GOARCH=arm64 $(MAKE) linux
 
 win:
-	go build -trimpath -ldflags "$(GOLDFLAGS) -s -w" -tags=release -o bin/kmactor.exe cmd/main.go
-
-mingw:
-	EXT=.exe GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ $(MAKE) release
+	EXT=.exe CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ $(MAKE) release
 
 tidy: go.mod
 	go mod tidy
