@@ -21,7 +21,7 @@ jobs:
     - name: Set up requirements for ${{ matrix.os }}
       if: ${{ matrix.os == 'windows-latest' }}
       run: |
-        wget https://github.com/niXman/mingw-builds-binaries/releases/download/12.2.0-rt_v10-rev2/x86_64-12.2.0-release-win32-seh-msvcrt-rt_v10-rev2.7z
+        Invoke-WebRequest -Uri https://github.com/niXman/mingw-builds-binaries/releases/download/12.2.0-rt_v10-rev2/x86_64-12.2.0-release-win32-seh-msvcrt-rt_v10-rev2.7z -OutFile x86_64-12.2.0-release-win32-seh-msvcrt-rt_v10-rev2.7z
         7z x x86_64-12.2.0-release-win32-seh-msvcrt-rt_v10-rev2.7z
         pwd
     - uses: actions/checkout@v3
