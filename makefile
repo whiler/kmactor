@@ -25,10 +25,7 @@ arm64:
 	EXT=.aarch64 GOARCH=arm64 $(MAKE) linux
 
 win:
-	echo $(CURDIR)
-	ls $(CURDIR)
-	ls $(CURDIR)/mingw64/bin
-	EXT=.exe CGO_ENABLED=1 CC=$(CURDIR)/mingw64/bin/gcc CXX=$(CURDIR)/mingw64/bin/g++ $(MAKE) release
+	CGO_ENABLED=1 CC=$(CURDIR)/mingw64/bin/gcc CXX=$(CURDIR)/mingw64/bin/g++ $(MAKE) release
 
 tidy: go.mod
 	go mod tidy
