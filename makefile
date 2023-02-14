@@ -7,7 +7,7 @@ TAGS ?= dev
 GOFLAGS ?= -race -v
 GOLDFLAGS ?= -X main.buildRevision=$(DT).$(REV)
 
-.PHONY: all amd64 arm64 win mingw build linux release tidy updep
+.PHONY: all amd64 arm64 win build linux release tidy updep
 
 build: tidy
 	go build $(GOFLAGS) -ldflags "$(GOLDFLAGS)" -tags="$(TAGS)" -o $(ARTIFACT) cmd/main.go
