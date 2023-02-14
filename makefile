@@ -2,6 +2,7 @@ DT := $(shell date +%Y%U)
 REV := $(shell git rev-parse --short HEAD)
 APP := $(shell basename $(CURDIR))
 ARTIFACT := bin/$(APP)$(EXT)
+MINGW64 := https://github.com/niXman/mingw-builds-binaries/releases/download/12.2.0-rt_v10-rev2/x86_64-12.2.0-release-win32-seh-msvcrt-rt_v10-rev2.7z
 
 TAGS ?= dev
 GOFLAGS ?= -race -v
@@ -24,8 +25,12 @@ amd64:
 arm64:
 	EXT=.aarch64 GOARCH=arm64 $(MAKE) linux
 
-win:
-	EXT=.exe CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ $(MAKE) release
+win: mingw64
+	EXT=.exe CGO_ENABLED=1 CC=$(CURDIR)/mingw64/bin/x86_64-w64-mingw32-gcc.exe CXX=$(CURDIR)/mingw64/bin/x86_64-w64-mingw32-g++.exe $(MAKE) release
+
+mingw64:
+	Invoke-WebRequest -Uri $(MINGW64) -OutFile mingw64.7z
+	7z x mingw64.7z
 
 tidy: go.mod
 	go mod tidy
