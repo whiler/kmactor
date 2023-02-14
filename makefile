@@ -29,7 +29,7 @@ win: mingw64
 	EXT=.exe CGO_ENABLED=1 CC=$(CURDIR)/mingw64/bin/x86_64-w64-mingw32-gcc.exe CXX=$(CURDIR)/mingw64/bin/x86_64-w64-mingw32-g++.exe $(MAKE) release
 
 mingw64:
-	Invoke-WebRequest -Uri $(MINGW64) -OutFile mingw64.7z
+	wget -O mingw64.7z $(MINGW64)
 	7z x mingw64.7z
 
 tidy: go.mod
