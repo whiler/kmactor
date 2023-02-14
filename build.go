@@ -7,7 +7,6 @@ import (
 )
 
 func Build(ver string) (http.Handler, error) {
-	Initialize()
 	return &kmactor{
 		version: ver,
 		upgrader: websocket.Upgrader{
