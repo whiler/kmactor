@@ -23,8 +23,6 @@ jobs:
       run: |
         Invoke-WebRequest -Uri https://github.com/niXman/mingw-builds-binaries/releases/download/12.2.0-rt_v10-rev2/x86_64-12.2.0-release-win32-seh-msvcrt-rt_v10-rev2.7z -OutFile x86_64-12.2.0-release-win32-seh-msvcrt-rt_v10-rev2.7z
         7z x x86_64-12.2.0-release-win32-seh-msvcrt-rt_v10-rev2.7z
-        echo D:\a\kmactor\kmactor\mingw64\bin;$Env:PATH
-        echo D:\a\kmactor\kmactor\mingw64\bin;$Env:PATH >> ${GITHUB_PATH}
     - uses: actions/checkout@v3
     - name: Set up Go
       uses: actions/setup-go@v3
@@ -35,6 +33,7 @@ jobs:
       run: make release
     - name: Build for ${{ matrix.os }}
       if: ${{ matrix.os == 'windows-latest' }}
-      run:
+      run: |
+        $Env:PATH = "D:\a\kmactor\kmactor\mingw64\bin;" + $Env:PATH
         echo $Env:PATH
         make win
