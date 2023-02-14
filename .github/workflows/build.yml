@@ -34,7 +34,7 @@ jobs:
         Invoke-WebRequest -Uri https://github.com/niXman/mingw-builds-binaries/releases/download/12.2.0-rt_v10-rev2/x86_64-12.2.0-release-win32-seh-msvcrt-rt_v10-rev2.7z -OutFile mingw64.7z
         7z x mingw64.7z
         make win
-        mv bin/kmactor bin/kmactor-${{ matrix.os }}
+        mv bin/kmactor bin/kmactor-${{ matrix.os }}.exe
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
