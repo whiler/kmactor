@@ -6,9 +6,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func Build(ver string) (http.Handler, error) {
+func Build(ver, token string) (http.Handler, error) {
 	return &kmactor{
 		version: ver,
+		token:   token,
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,

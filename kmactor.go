@@ -12,6 +12,7 @@ import (
 
 type kmactor struct {
 	version  string
+	token    string
 	upgrader websocket.Upgrader
 	count    atomic.Uint32
 }
@@ -21,6 +22,8 @@ func (self *kmactor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	} else if !websocket.IsWebSocketUpgrade(r) {
 		fmt.Fprintf(w, "kmactor %s @ %d", self.version, os.Getpid())
+	} else if self.token != r.URL.Query().Get("token") {
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 	} else if conn, err := self.upgrader.Upgrade(w, r, nil); err == nil {
 		defer conn.Close()
 		if self.count.CompareAndSwap(0, 1) {
