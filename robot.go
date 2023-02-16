@@ -60,7 +60,7 @@ var SupportedKeys = map[string]bool{
 	"shift":     true,
 	"ctrl":      true,
 	"alt":       true,
-	"space":     true,
+	" ":         true,
 	"backspace": true,
 	"enter":     true,
 
