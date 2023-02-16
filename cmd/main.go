@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	normal        = "0.1.0"
+	normal        = "0.1.1"
 	preRelease    = "dev"
 	buildRevision string
 
