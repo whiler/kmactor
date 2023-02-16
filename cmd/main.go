@@ -39,6 +39,7 @@ func main() {
 	var (
 		flagSet   = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 		port      int
+		token     string
 		cert, key string
 		logto     string
 		version   bool
@@ -47,6 +48,7 @@ func main() {
 	log.SetFlags(log.Ltime)
 
 	flagSet.IntVar(&port, "port", 9242, "local port")
+	flagSet.StringVar(&token, "token", "", "token")
 	flagSet.StringVar(&cert, "cert", ensure("cert.pem"), "cert file path")
 	flagSet.StringVar(&key, "key", ensure("key.pem"), "key file path")
 	flagSet.StringVar(&logto, "log", "kmactor.log", "log file path")
@@ -68,7 +70,7 @@ func main() {
 			log.Println("cert and key are required at the same time")
 		} else if names, err := getCertName(cert, key); err != nil {
 			log.Println(err)
-		} else if handler, err := kmactor.Build(ver); err != nil {
+		} else if handler, err := kmactor.Build(ver, token); err != nil {
 			log.Println(err)
 		} else {
 			tls := cert != "" && key != ""
