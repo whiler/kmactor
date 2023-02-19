@@ -1,6 +1,6 @@
 package kmactor
 
-import "github.com/go-vgo/robotgo"
+import "github.com/whiler/robotgo"
 
 const (
 	DeviceKey   = 1
