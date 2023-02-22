@@ -9,32 +9,29 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - name: Set up requirements for ubuntu
+    - name: Set up requirements for Linux
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         sudo apt update -y
         sudo apt install gcc libc6-dev -y
         sudo apt install libx11-dev xorg-dev libxtst-dev -y
-        sudo apt install libpng++-dev -y
-        sudo apt install xcb libxcb-xkb-dev x11-xkb-utils libx11-xcb-dev libxkbcommon-x11-dev libxkbcommon-dev -y
-        sudo apt install xsel xclip -y
     - uses: actions/checkout@v3
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
         go-version: 1.19
-    - name: Build for macos or ubuntu
-      if: ${{ matrix.os != 'windows-latest' }}
+    - name: Build
       run: |
         make release
-        mv bin/kmactor bin/kmactor-${{ matrix.os }}
-    - name: Build for windows
+    - name: Rename for Windows
       if: ${{ matrix.os == 'windows-latest' }}
-      run: |
-        Invoke-WebRequest -Uri https://github.com/niXman/mingw-builds-binaries/releases/download/12.2.0-rt_v10-rev2/x86_64-12.2.0-release-win32-seh-msvcrt-rt_v10-rev2.7z -OutFile mingw64.7z
-        7z x mingw64.7z
-        make win
-        mv bin/kmactor bin/kmactor-${{ matrix.os }}.exe
+      run: mv bin/kmactor bin/kmactor-windows-latest.exe
+    - name: Rename for macOS
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: mv bin/kmactor bin/kmactor-macos-latest
+    - name: Rename for Linux
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: mv bin/kmactor bin/kmactor-linux-latest
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
@@ -44,15 +41,29 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: build
-
     steps:
     - name: Download artifact
       uses: actions/download-artifact@v3
       with:
         name: artifact
         path: ./
+    - name: Download SSL certificate
+      run: |
+        wget -O localhost.direct.zip https://aka.re/localhost
+        unzip -P localhost localhost.direct.zip
+        mv localhost.direct.crt cert.pem
+        mv localhost.direct.key key.pem
+        rm localhost.direct.zip
+    - name: Zip package
+      run: |
+        zip kmactor-windows.zip *.pem kmactor-windows-latest.exe
+        zip kmactor-macos.zip *.pem kmactor-macos-latest
+        zip kmactor-linux.zip *.pem kmactor-linux-latest
     - name: Upload to Release
       uses: softprops/action-gh-release@v1
       with:
         draft: true
-        files: kmactor-*
+        files: |
+          *.pem
+          *.zip
+          kmactor-*
