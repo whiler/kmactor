@@ -21,8 +21,7 @@ jobs:
       with:
         go-version: 1.19
     - name: Build
-      run: |
-        make release
+      run: make release
     - name: Rename for Windows
       if: ${{ matrix.os == 'windows-latest' }}
       run: mv bin/kmactor bin/kmactor-windows-latest.exe
@@ -47,24 +46,11 @@ jobs:
       with:
         name: artifact
         path: ./
-    - name: Download SSL certificate
-      run: |
-        wget -O localhost.direct.zip https://aka.re/localhost
-        unzip -P localhost localhost.direct.zip
-        mv localhost.direct.crt cert.pem
-        mv localhost.direct.key key.pem
-        rm localhost.direct.zip
-    - name: Zip package
-      run: |
-        zip kmactor-windows.zip *.pem kmactor-windows-latest.exe
-        zip kmactor-macos.zip *.pem kmactor-macos-latest
-        zip kmactor-linux.zip *.pem kmactor-linux-latest
     - name: Upload to Release
       uses: softprops/action-gh-release@v1
       with:
         draft: true
         files: |
-          cert.pem, key.pem
-          kmactor-windows.zip, kmactor-windows-latest.exe
-          kmactor-macos.zip kmactor-macos-latest
-          kmactor-linux.zip kmactor-linux-latest
+          kmactor-windows-latest.exe
+          kmactor-macos-latest
+          kmactor-linux-latest
