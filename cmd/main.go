@@ -159,14 +159,14 @@ func getCertName(certpath, keypath string) ([]string, error) {
 			set := map[string]bool{}
 			set[x509cert.Subject.CommonName] = true
 			for _, name := range x509cert.DNSNames {
-				set[strings.ReplaceAll(name, "*", "local")] = true
+				set[name] = true
 			}
 			for _, ip := range x509cert.IPAddresses {
 				set[ip.String()] = true
 			}
 			names := make([]string, 0, len(set))
 			for name := range set {
-				names = append(names, name)
+				names = append(names, strings.ReplaceAll(name, "*", "local"))
 			}
 			return names, nil
 		}
