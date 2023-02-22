@@ -64,6 +64,7 @@ jobs:
       with:
         draft: true
         files: |
-          *.pem
-          *.zip
-          kmactor-*
+          cert.pem, key.pem
+          kmactor-windows.zip, kmactor-windows-latest.exe
+          kmactor-macos.zip kmactor-macos-latest
+          kmactor-linux.zip kmactor-linux-latest
