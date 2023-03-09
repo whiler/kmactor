@@ -12,7 +12,7 @@ jobs:
     - name: Set up requirements for Linux
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
-        sudo sed -i -e 's/^deb /deb [arch=amd64] /' /etc/apt/sources.list
+        sudo sed -i -e 's/^deb /deb [arch=amd64,arm64] /' /etc/apt/sources.list
         sudo dpkg --add-architecture arm64
         sudo apt update -qq -y
         sudo apt install -qq -y gcc gcc-aarch64-linux-gnu xorg-dev
