@@ -4,14 +4,27 @@ APP := $(shell basename $(CURDIR))
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
 EXT :=
-ifeq ($(GOOS), windows)
+ifeq ($(GOOS),windows)
 	EXT := .exe
 endif
 ARTIFACT := bin/$(APP)-$(GOOS)-$(GOARCH)$(EXT)
+AMD64CC :=
+ARM64CC :=
 
 TAGS ?= dev
 GOFLAGS ?= -race -v
 GOLDFLAGS ?= -X main.buildRevision=$(DT).$(REV)
+
+ifeq ($(shell go env GOHOSTOS), windows)
+	AMD64CC = x86_64-w64-mingw32-gcc
+	ARM64CC = aarch64-w64-mingw32-gcc
+else ifeq ($(shell go env GOHOSTOS), linux)
+ifeq ($(shell go env GOHOSTARCH), amd64)
+	ARM64CC = aarch64-linux-gnu-gcc
+else
+	AMD64CC = x86_64-linux-gnu-gcc
+endif
+endif
 
 .PHONY: all amd64 arm64 build release tidy updep
 
@@ -22,10 +35,10 @@ release:
 	GOFLAGS="-trimpath" GOLDFLAGS="$(GOLDFLAGS) -s -w" TAGS="release" $(MAKE) build
 
 amd64:
-	GOARCH=amd64 $(MAKE) release
+	GOARCH=amd64 CC=$(AMD64CC) $(MAKE) release
 
 arm64:
-	GOARCH=arm64 $(MAKE) release
+	GOARCH=arm64 CC=$(ARM64CC) $(MAKE) release
 
 tidy: go.mod
 	go mod tidy
