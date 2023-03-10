@@ -31,10 +31,10 @@ jobs:
         unzip llvm-mingw-20220906-msvcrt-x86_64.zip
         $curdir = Get-Location
         $env:PATH="$curdir\llvm-mingw-20220906-msvcrt-x86_64\bin;"+"$env:PATH"
-        $env:PATH
         make tidy
         make all
     - name: Build
+      if: ${{ matrix.os != 'windows-latest' }}
       run: |
         make tidy
         make all
