@@ -12,25 +12,32 @@ jobs:
     - name: Set up requirements for Linux
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
-        sudo apt update -y
-        sudo apt install gcc libc6-dev -y
-        sudo apt install libx11-dev xorg-dev libxtst-dev -y
+        sudo cp /etc/apt/sources.list /etc/apt/sources.list.d/ports.list
+        sudo sed -i -e 's/^deb /deb [arch=arm64] /' -e 's/\/ubuntu/\/ubuntu-ports/' -e 's/archive/ports/' /etc/apt/sources.list.d/ports.list
+        sudo apt update -qq -y
+        sudo dpkg --add-architecture arm64
+        sudo apt install -qq -y gcc gcc-aarch64-linux-gnu xorg-dev
+        sudo apt install -qq -y libc6-dev       libx11-dev       libxtst-dev
+        sudo apt install -qq -y libc6-dev:arm64 libx11-dev:arm64 libxtst-dev:arm64
     - uses: actions/checkout@v3
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
         go-version: 1.19
-    - name: Build
-      run: make release
-    - name: Rename for Windows
+    - name: Build for Windows
       if: ${{ matrix.os == 'windows-latest' }}
-      run: mv bin/kmactor bin/kmactor-windows-latest.exe
-    - name: Rename for macOS
-      if: ${{ matrix.os == 'macos-latest' }}
-      run: mv bin/kmactor bin/kmactor-macos-latest
-    - name: Rename for Linux
-      if: ${{ matrix.os == 'ubuntu-latest' }}
-      run: mv bin/kmactor bin/kmactor-linux-latest
+      run: |
+        Invoke-WebRequest -Uri https://github.com/mstorsjo/llvm-mingw/releases/download/20220906/llvm-mingw-20220906-msvcrt-x86_64.zip -OutFile llvm-mingw-20220906-msvcrt-x86_64.zip
+        unzip llvm-mingw-20220906-msvcrt-x86_64.zip
+        $curdir = Get-Location
+        $env:PATH="$curdir\llvm-mingw-20220906-msvcrt-x86_64\bin;"+"$env:PATH"
+        make tidy
+        make all
+    - name: Build
+      if: ${{ matrix.os != 'windows-latest' }}
+      run: |
+        make tidy
+        make all
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
@@ -50,7 +57,4 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         draft: true
-        files: |
-          kmactor-windows-latest.exe
-          kmactor-macos-latest
-          kmactor-linux-latest
+        files: kmactor-*

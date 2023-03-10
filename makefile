@@ -1,28 +1,44 @@
 DT := $(shell date +%Y%U)
 REV := $(shell git rev-parse --short HEAD)
 APP := $(shell basename $(CURDIR))
-ARTIFACT := bin/$(APP)$(EXT)
+GOOS := $(shell go env GOOS)
+GOARCH := $(shell go env GOARCH)
+EXT :=
+ifeq ($(GOOS),windows)
+	EXT := .exe
+endif
+ARTIFACT := bin/$(APP)-$(GOOS)-$(GOARCH)$(EXT)
+AMD64CC :=
+ARM64CC :=
 
 TAGS ?= dev
 GOFLAGS ?= -race -v
 GOLDFLAGS ?= -X main.buildRevision=$(DT).$(REV)
 
-.PHONY: all amd64 arm64 build linux release tidy updep
+ifeq ($(shell go env GOHOSTOS), windows)
+	AMD64CC = x86_64-w64-mingw32-gcc
+	ARM64CC = aarch64-w64-mingw32-gcc
+else ifeq ($(shell go env GOHOSTOS), linux)
+ifeq ($(shell go env GOHOSTARCH), amd64)
+	ARM64CC = aarch64-linux-gnu-gcc
+else
+	AMD64CC = x86_64-linux-gnu-gcc
+endif
+endif
 
-build: tidy
-	go build $(GOFLAGS) -ldflags "$(GOLDFLAGS)" -tags="$(TAGS)" -o $(ARTIFACT) cmd/main.go
+.PHONY: all amd64 arm64 build release tidy updep
+
+build:
+	CGO_ENABLED=1 go build $(GOFLAGS) -ldflags "$(GOLDFLAGS)" -tags="$(TAGS)" -o $(ARTIFACT) cmd/main.go
 
 release:
 	GOFLAGS="-trimpath" GOLDFLAGS="$(GOLDFLAGS) -s -w" TAGS="release" $(MAKE) build
 
-linux:
-	GOOS=linux $(MAKE) release
-
 amd64:
-	EXT=.x86-64 GOARCH=amd64 $(MAKE) linux
+	GOARCH=amd64 CC=$(AMD64CC) $(MAKE) release
 
 arm64:
-	EXT=.aarch64 GOARCH=arm64 $(MAKE) linux
+	GOARCH=arm64 CC=$(ARM64CC) $(MAKE) release
 
 tidy: go.mod
 	go mod tidy
