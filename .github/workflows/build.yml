@@ -12,9 +12,11 @@ jobs:
     - name: Set up requirements for Linux
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
-        sudo sed -i -e 's/^deb /deb [arch=amd64,arm64] /' /etc/apt/sources.list
-        sudo dpkg --add-architecture arm64
+        sudo cp /etc/apt/sources.list /etc/apt/sources.list.d/ports.list
+        sudo sed -i -e 's/^deb /deb [arch=arm64] /' -e 's/\/ubuntu/\/ubuntu-ports/' -e 's/archive/ports/' /etc/apt/sources.list.d/ports.list
+        sudo grep '^deb' /etc/apt/sources.list.d/ports.list
         sudo apt update -qq -y
+        sudo dpkg --add-architecture arm64
         sudo apt install -qq -y gcc gcc-aarch64-linux-gnu xorg-dev
         sudo apt install -qq -y libc6-dev       libx11-dev       libxtst-dev
         sudo apt install -qq -y libc6-dev:arm64 libx11-dev:arm64 libxtst-dev:arm64
