@@ -14,7 +14,6 @@ jobs:
       run: |
         sudo cp /etc/apt/sources.list /etc/apt/sources.list.d/ports.list
         sudo sed -i -e 's/^deb /deb [arch=arm64] /' -e 's/\/ubuntu/\/ubuntu-ports/' -e 's/archive/ports/' /etc/apt/sources.list.d/ports.list
-        sudo grep '^deb' /etc/apt/sources.list.d/ports.list
         sudo apt update -qq -y
         sudo dpkg --add-architecture arm64
         sudo apt install -qq -y gcc gcc-aarch64-linux-gnu xorg-dev
@@ -25,6 +24,16 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: 1.19
+    - name: Build for Windows
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: |
+        Invoke-WebRequest -Uri https://github.com/mstorsjo/llvm-mingw/releases/download/20220906/llvm-mingw-20220906-msvcrt-x86_64.zip -OutFile llvm-mingw-20220906-msvcrt-x86_64.zip
+        unzip llvm-mingw-20220906-msvcrt-x86_64.zip
+        $curdir = Get-Location
+        $env:PATH="$curdir\llvm-mingw-20220906-msvcrt-x86_64\bin;"+"$env:PATH"
+        $env:PATH
+        make tidy
+        make all
     - name: Build
       run: |
         make tidy
