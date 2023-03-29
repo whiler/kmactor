@@ -31,9 +31,9 @@ jobs:
         unzip -q llvm-mingw-20220906-msvcrt-x86_64.zip
         $curdir = Get-Location
         $env:PATH = "$curdir\llvm-mingw-20220906-msvcrt-x86_64\bin;"+"$env:PATH"
+        go get github.com/josephspurrier/goversioninfo/cmd/goversioninfo@v1.4.0
+        go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@v1.4.0
         make tidy
-        go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo
-        ls "$(go env GOPATH)\bin"
         make all
     - name: Build
       if: ${{ matrix.os != 'windows-latest' }}
