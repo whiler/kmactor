@@ -35,10 +35,22 @@ release:
 	GOFLAGS="-trimpath" GOLDFLAGS="$(GOLDFLAGS) -s -w" TAGS="release" $(MAKE) build
 
 amd64:
+ifeq ($(shell go env GOHOSTOS), windows)
+	goversioninfo -64
+endif
 	GOARCH=amd64 CC=$(AMD64CC) $(MAKE) release
+ifeq ($(shell go env GOHOSTOS), windows)
+	rm -f resource.syso
+endif
 
 arm64:
+ifeq ($(shell go env GOHOSTOS), windows)
+	goversioninfo -64 -arm
+endif
 	GOARCH=arm64 CC=$(ARM64CC) $(MAKE) release
+ifeq ($(shell go env GOHOSTOS), windows)
+	rm -f resource.syso
+endif
 
 tidy: go.mod
 	go mod tidy
