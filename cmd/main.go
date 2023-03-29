@@ -17,6 +17,7 @@ import (
 	"golang.org/x/net/http2/h2c"
 
 	"kmactor"
+	"kmactor/app"
 )
 
 var (
@@ -60,6 +61,8 @@ func main() {
 		log.Println(err)
 	} else if version {
 		fmt.Println(ver)
+	} else if err = app.Initialize(); err != nil {
+		log.Println(err)
 	} else if closer, err := logging(logto); err != nil {
 		log.Println(err)
 	} else {
