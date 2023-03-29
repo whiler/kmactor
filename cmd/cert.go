@@ -79,12 +79,12 @@ func getRepo(path string) (string, error) {
 			} else if u, err := url.Parse(cur); err != nil {
 				return "", err
 			} else if !strings.HasPrefix(u.Scheme, "http") || u.Host == "" {
-				break
+				return "", ErrInvalidRepo
 			} else {
 				return u.String(), nil
 			}
 		}
-		return "", ErrInvalidRepo
+		return "", nil
 	}
 }
 
@@ -144,6 +144,8 @@ func updateCert(certpath, keypath, repopath string) error {
 		return nil
 	} else if repo, err := getRepo(repopath); err != nil {
 		return err
+	} else if repo == "" {
+		return nil
 	} else if certContent, keyContent, err := fetchCert(repo); err != nil {
 		return err
 	} else if cert, err := tls.X509KeyPair(certContent, keyContent); err != nil {
