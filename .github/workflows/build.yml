@@ -28,12 +28,13 @@ jobs:
       if: ${{ matrix.os == 'windows-latest' }}
       run: |
         Invoke-WebRequest -Uri https://github.com/mstorsjo/llvm-mingw/releases/download/20220906/llvm-mingw-20220906-msvcrt-x86_64.zip -OutFile llvm-mingw-20220906-msvcrt-x86_64.zip
-        unzip llvm-mingw-20220906-msvcrt-x86_64.zip
+        unzip -q llvm-mingw-20220906-msvcrt-x86_64.zip
         $curdir = Get-Location
         $env:PATH = "$curdir\llvm-mingw-20220906-msvcrt-x86_64\bin;"+"$env:PATH"
         go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo
         $gopath = go env GOPATH
         $env:PATH = "$gopath\bin;"+"$env:PATH"
+        echo $env:PATH
         make tidy
         make all
     - name: Build
