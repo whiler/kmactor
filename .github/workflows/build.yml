@@ -20,6 +20,7 @@ jobs:
         sudo cp /etc/apt/sources.list /etc/apt/sources.list.d/ports.list
         sudo sed -i -e 's/^deb /deb [arch=arm64] /' -e 's/\/ubuntu/\/ubuntu-ports/' -e 's/archive/ports/' /etc/apt/sources.list.d/ports.list
         sudo apt-get update -qq -y || true
+        grep ^deb /etc/apt/sources.list.d/ports.list
     - uses: actions/checkout@v3
     - name: Set up Go
       uses: actions/setup-go@v3
