@@ -3,4 +3,4 @@
 
 package app
 
-func Initialize() error { return nil }
+func Initialize(cli bool) error { return nil }

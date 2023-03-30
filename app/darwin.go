@@ -1,7 +1,7 @@
 //go:build darwin
 // +build darwin
 
-// macOS App 运行时的工作路径是`/` 。
+// macOS App 运行时的工作路径是 `/` 。
 // 使用 `~/Library/Caches/kmactor` 作为工作路径，并将需要的资源文件复制到工作路径下。
 
 package app
@@ -19,8 +19,10 @@ var files = []string{
 	"repo.txt",
 }
 
-func Initialize() error {
-	if path, err := os.Executable(); err != nil {
+func Initialize(cli bool) error {
+	if cli {
+		return nil
+	} else if path, err := os.Executable(); err != nil {
 		return err
 	} else if cacheDir, err := os.UserCacheDir(); err != nil {
 		return err
