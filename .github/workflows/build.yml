@@ -6,11 +6,11 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019, macos-11]
+        os: [ubuntu-22.04, windows-2019, macos-11]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Set up requirements for Linux
-      if: ${{ matrix.os == 'ubuntu-20.04' }}
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
         sudo cp /etc/apt/sources.list /etc/apt/sources.list.d/ports.list
         sudo sed -i -e 's/^deb /deb [arch=arm64] /' -e 's/\/ubuntu/\/ubuntu-ports/' -e 's/archive/ports/' /etc/apt/sources.list.d/ports.list
@@ -41,7 +41,7 @@ jobs:
         make tidy
         make all
     - name: Build for Linux
-      if: ${{ matrix.os == 'ubuntu-20.04' }}
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
         make tidy
         sudo apt install -qq -y libgtk-3-dev libayatana-appindicator3-dev
@@ -57,7 +57,7 @@ jobs:
         path: bin/kmactor-*
 
   release:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
     steps:
     - name: Download artifact
