@@ -71,7 +71,7 @@ func main() {
 			log.Printf("invalid port: %d", port)
 		} else if (cert != "" && key == "") || (cert == "" && key != "") {
 			log.Println("cert and key are required at the same time")
-		} else if err = updateCert(cert, key, repo); err != nil {
+		} else if err = updateCert(cert, key, repo, ver); err != nil {
 			log.Println(err)
 		} else if names, err := getCertNames(cert, key); err != nil {
 			log.Println(err)
