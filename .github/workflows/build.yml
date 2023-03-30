@@ -14,11 +14,12 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
+        sudo apt-get update -qq -y || true
+        sudo apt-get install -qq -y gcc gcc-aarch64-linux-gnu xorg-dev
         sudo dpkg --add-architecture arm64
         sudo cp /etc/apt/sources.list /etc/apt/sources.list.d/ports.list
         sudo sed -i -e 's/^deb /deb [arch=arm64] /' -e 's/\/ubuntu/\/ubuntu-ports/' -e 's/archive/ports/' /etc/apt/sources.list.d/ports.list
         sudo apt-get update -qq -y || true
-        sudo apt-get install -qq -y gcc gcc-aarch64-linux-gnu xorg-dev
         sudo apt-get install -qq -y libc6-dev:amd64 libx11-dev:amd64 libxtst-dev:amd64
         sudo apt-get install -qq -y libc6-dev:arm64 libx11-dev:arm64 libxtst-dev:arm64
     - uses: actions/checkout@v3
