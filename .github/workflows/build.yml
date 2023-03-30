@@ -6,11 +6,11 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019, macos-11]
+        os: [ubuntu-22.04, windows-2019, macos-11]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Set up requirements for Linux
-      if: ${{ matrix.os == 'ubuntu-20.04' }}
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -43,7 +43,7 @@ jobs:
         make tidy
         make all
     - name: Build for Linux
-      if: ${{ matrix.os == 'ubuntu-20.04' }}
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
         make tidy
         sudo apt-get install -qq -y libc6-dev:amd64 libx11-dev:amd64 libxtst-dev:amd64 libgtk-3-dev:amd64 libayatana-appindicator3-dev:amd64
@@ -61,7 +61,7 @@ jobs:
         path: bin/kmactor-*
 
   release:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
     steps:
     - name: Download artifact
