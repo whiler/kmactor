@@ -5,7 +5,7 @@ package app
 
 import _ "embed"
 
-//go:embed white.ico
+//go:embed 96.png
 var trayIcon []byte
 
 func GetTrayIcon() []byte { return trayIcon }
