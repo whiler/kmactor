@@ -18,6 +18,7 @@ GOLDFLAGS ?= -X main.buildRevision=$(DT).$(REV)
 ifeq ($(shell go env GOHOSTOS), windows)
 	AMD64CC = x86_64-w64-mingw32-gcc
 	ARM64CC = aarch64-w64-mingw32-gcc
+	GOLDFLAGS = -H=windowsgui -X main.buildRevision=$(DT).$(REV)
 else ifeq ($(shell go env GOHOSTOS), linux)
 ifeq ($(shell go env GOHOSTARCH), amd64)
 	ARM64CC = aarch64-linux-gnu-gcc
