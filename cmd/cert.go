@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -59,6 +60,7 @@ func getCertNames(certpath, keypath string) ([]string, error) {
 		for name := range set {
 			names = append(names, strings.ReplaceAll(name, "*", "local"))
 		}
+		sort.Slice(names, func(i, j int) bool { return len(names[i]) < len(names[j]) })
 		return names, nil
 	}
 }
@@ -88,13 +90,13 @@ func getRepo(path string) (string, error) {
 	}
 }
 
-func wget(target string) ([]byte, error) {
+func wget(target, version string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil); err != nil {
 		return nil, err
 	} else {
-		req.Header.Add("User-Agent", "kmactor/"+ver)
+		req.Header.Add("User-Agent", "kmactor/"+version)
 		if resp, err := http.DefaultClient.Do(req); err != nil {
 			return nil, err
 		} else {
@@ -124,20 +126,20 @@ func dumpto(path string, content []byte) error {
 	}
 }
 
-func fetchCert(repo string) ([]byte, []byte, error) {
+func fetchCert(repo, version string) ([]byte, []byte, error) {
 	log.Printf("fetching cert from %s", repo)
 	if u, err := url.Parse(repo); err != nil {
 		return nil, nil, err
-	} else if certContent, err := wget(u.JoinPath("cert.pem").String()); err != nil {
+	} else if certContent, err := wget(u.JoinPath("cert.pem").String(), version); err != nil {
 		return nil, nil, err
-	} else if keypath, err := wget(u.JoinPath("key.pem").String()); err != nil {
+	} else if keypath, err := wget(u.JoinPath("key.pem").String(), version); err != nil {
 		return nil, nil, err
 	} else {
 		return certContent, keypath, nil
 	}
 }
 
-func updateCert(certpath, keypath, repopath string) error {
+func updateCert(certpath, keypath, repopath, version string) error {
 	if repopath == "" || certpath == "" || keypath == "" {
 		return nil
 	} else if isValid(certpath, keypath) {
@@ -146,7 +148,7 @@ func updateCert(certpath, keypath, repopath string) error {
 		return err
 	} else if repo == "" {
 		return nil
-	} else if certContent, keyContent, err := fetchCert(repo); err != nil {
+	} else if certContent, keyContent, err := fetchCert(repo, version); err != nil {
 		return err
 	} else if cert, err := tls.X509KeyPair(certContent, keyContent); err != nil {
 		return err

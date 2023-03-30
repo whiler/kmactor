@@ -8,5 +8,9 @@
 	<string>icon</string>
 	<key>CFBundleIdentifier</key>
 	<string>io.github.whiler.noscreen.kmactor</string>
+	<key>NSHighResolutionCapable</key>
+	<string>True</string>
+	<key>LSUIElement</key>
+	<string>1</string>
 </dict>
 </plist>

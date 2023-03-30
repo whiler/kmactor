@@ -45,6 +45,7 @@ func main() {
 		logto     string
 		repo      string
 		version   bool
+		cli       bool
 	)
 
 	log.SetFlags(log.Ltime)
@@ -56,73 +57,87 @@ func main() {
 	flagSet.StringVar(&logto, "log", "kmactor.log", "log file path")
 	flagSet.StringVar(&repo, "repo", use("repo.txt"), "auto update cert from repo")
 	flagSet.BoolVar(&version, "version", false, "version")
+	flagSet.BoolVar(&cli, "cli", false, "cli mode")
 
 	if err := flagSet.Parse(os.Args[1:]); err != nil {
 		log.Println(err)
 	} else if version {
 		fmt.Println(ver)
-	} else if err = app.Initialize(); err != nil {
+	} else if err = app.Initialize(cli); err != nil {
 		log.Println(err)
 	} else if closer, err := logging(logto); err != nil {
 		log.Println(err)
+	} else if 0 >= port || port >= 65536 {
+		log.Printf("invalid port: %d", port)
+		closer.Close()
+	} else if (cert != "" && key == "") || (cert == "" && key != "") {
+		log.Println("cert and key are required at the same time")
+		closer.Close()
+	} else if err = updateCert(cert, key, repo, ver); err != nil {
+		log.Println(err)
+		closer.Close()
+	} else if names, err := getCertNames(cert, key); err != nil {
+		log.Println(err)
+		closer.Close()
+	} else if handler, err := kmactor.Build(ver, token); err != nil {
+		log.Println(err)
+		closer.Close()
 	} else {
-		defer closer.Close()
-		if 0 >= port || port >= 65536 {
-			log.Printf("invalid port: %d", port)
-		} else if (cert != "" && key == "") || (cert == "" && key != "") {
-			log.Println("cert and key are required at the same time")
-		} else if err = updateCert(cert, key, repo); err != nil {
-			log.Println(err)
-		} else if names, err := getCertNames(cert, key); err != nil {
-			log.Println(err)
-		} else if handler, err := kmactor.Build(ver, token); err != nil {
-			log.Println(err)
-		} else {
-			tls := cert != "" && key != ""
-			srv := &http.Server{
-				Addr:    fmt.Sprintf("localhost:%d", port),
-				Handler: h2c.NewHandler(handler, &http2.Server{}),
+		tls := cert != "" && key != ""
+		srv := &http.Server{
+			Addr:    fmt.Sprintf("localhost:%d", port),
+			Handler: h2c.NewHandler(handler, &http2.Server{}),
+		}
+
+		quit := make(chan struct{})
+		go func() {
+			defer close(quit)
+			var err error
+			if tls {
+				err = srv.ListenAndServeTLS(cert, key)
+			} else {
+				err = srv.ListenAndServe()
+			}
+			if err != nil && !errors.Is(err, http.ErrServerClosed) {
+				log.Printf("serve error: %v", err)
+			}
+		}()
+
+		select {
+		case <-quit:
+			closer.Close()
+		case <-time.After(time.Second):
+			ws := "ws"
+			proto := "http"
+			if tls {
+				ws = "wss"
+				proto = "https"
+			}
+			for _, name := range names {
+				log.Printf("serving at %s://%s:%d", ws, name, port)
 			}
 
-			quit := make(chan struct{})
-			go func() {
-				defer close(quit)
-				var err error
-				if tls {
-					err = srv.ListenAndServeTLS(cert, key)
-				} else {
-					err = srv.ListenAndServe()
-				}
-				if err != nil && !errors.Is(err, http.ErrServerClosed) {
-					log.Printf("serve error: %v", err)
-				}
-			}()
-
-			select {
-			case <-quit:
-			case <-time.After(time.Second):
-				proto := "ws"
-				if tls {
-					proto = "wss"
-				}
-				for _, name := range names {
-					log.Printf("serving at %s://%s:%d", proto, name, port)
-				}
-
-				sig := make(chan os.Signal, 1)
-				signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-				select {
-				case <-sig:
-				case <-quit:
-				}
+			sig := make(chan os.Signal, 1)
+			signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+			clean := func() {
 				signal.Stop(sig)
 				close(sig)
-
 				ctx, cancel := context.WithTimeout(context.Background(), 13*time.Second)
 				if err := srv.Shutdown(ctx); err != nil {
 					log.Printf("shutdown error: %v", err)
 				}
 				cancel()
+				log.Println("quit")
+				closer.Close()
+			}
+			if cli {
+				select {
+				case <-sig:
+				case <-quit:
+				}
+				clean()
+			} else {
+				tray(sig, quit, fmt.Sprintf("%s://%s:%d", proto, names[0], port), clean)
 			}
 		}
 	}
