@@ -6,19 +6,21 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-2019, macos-11]
+        os: [ubuntu-20.04, windows-2019, macos-11]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Set up requirements for Linux
-      if: ${{ matrix.os == 'ubuntu-22.04' }}
+      if: ${{ matrix.os == 'ubuntu-20.04' }}
+      env:
+        DEBIAN_FRONTEND: noninteractive
       run: |
+        sudo dpkg --add-architecture arm64
         sudo cp /etc/apt/sources.list /etc/apt/sources.list.d/ports.list
         sudo sed -i -e 's/^deb /deb [arch=arm64] /' -e 's/\/ubuntu/\/ubuntu-ports/' -e 's/archive/ports/' /etc/apt/sources.list.d/ports.list
-        sudo apt update -qq -y
-        sudo dpkg --add-architecture arm64
-        sudo apt install -qq -y gcc gcc-aarch64-linux-gnu xorg-dev
-        sudo apt install -qq -y libc6-dev       libx11-dev       libxtst-dev
-        sudo apt install -qq -y libc6-dev:arm64 libx11-dev:arm64 libxtst-dev:arm64
+        sudo apt-get update -qq -y
+        sudo apt-get install -qq -y gcc gcc-aarch64-linux-gnu xorg-dev
+        sudo apt-get install -qq -y libc6-dev:amd64 libx11-dev:amd64 libxtst-dev:amd64
+        sudo apt-get install -qq -y libc6-dev:arm64 libx11-dev:arm64 libxtst-dev:arm64
     - uses: actions/checkout@v3
     - name: Set up Go
       uses: actions/setup-go@v3
@@ -41,12 +43,12 @@ jobs:
         make tidy
         make all
     - name: Build for Linux
-      if: ${{ matrix.os == 'ubuntu-22.04' }}
+      if: ${{ matrix.os == 'ubuntu-20.04' }}
       run: |
         make tidy
-        sudo apt install -qq -y libgtk-3-dev libayatana-appindicator3-dev
+        sudo apt-get install -qq -y libgtk-3-dev:amd64 libayatana-appindicator3-dev:amd64
         make amd64
-        sudo apt install -qq -y libgtk-3-dev:arm64 libayatana-appindicator3-dev:arm64
+        sudo apt-get install -qq -y libgtk-3-dev:arm64 libayatana-appindicator3-dev:arm64
         export PKG_CONFIG_PATH=$(dirname $(find / -type f -name 'ayatana-appindicator3-*.pc' | head -1))
         make arm64
 
@@ -57,7 +59,7 @@ jobs:
         path: bin/kmactor-*
 
   release:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     needs: build
     steps:
     - name: Download artifact
