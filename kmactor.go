@@ -34,7 +34,7 @@ func (self *kmactor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			scheme = "wss"
 		}
 		fmt.Fprintf(w, "address: %s\r\n", (&url.URL{Scheme: scheme, Host: r.Host}).String())
-	} else if self.token != r.URL.Query().Get("token") {
+	} else if len(self.token) > 0 && self.token != r.URL.Query().Get("token") {
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 	} else if conn, err := self.upgrader.Upgrade(w, r, nil); err == nil {
 		defer conn.Close()
