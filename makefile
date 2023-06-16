@@ -27,7 +27,7 @@ else
 endif
 endif
 
-.PHONY: all amd64 arm64 build release tidy updep
+.PHONY: all amd64 arm64 build macapp release tidy updep
 
 build:
 	CGO_ENABLED=1 go build $(GOFLAGS) -ldflags "$(GOLDFLAGS)" -tags="$(TAGS)" -o $(ARTIFACT) cmd/*.go
@@ -61,5 +61,8 @@ updep: go.mod
 	head -1 go.mod > /tmp/go.mod
 	mv /tmp/go.mod go.mod
 	go mod tidy
+
+macapp: kmactor.app
+	zip bin/$(APP).zip -r kmactor.app
 
 all: amd64 arm64
