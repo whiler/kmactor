@@ -41,6 +41,7 @@ jobs:
       run: |
         make tidy
         make all
+        make macapp
     - name: Build for Linux
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
@@ -54,7 +55,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: artifact
-        path: bin/kmactor-*
+        path: bin/kmactor*
 
   release:
     runs-on: ubuntu-22.04
@@ -69,4 +70,4 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         draft: true
-        files: kmactor-*
+        files: kmactor*

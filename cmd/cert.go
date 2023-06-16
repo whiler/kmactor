@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -18,8 +17,6 @@ import (
 )
 
 var errTimeCertificate = errors.New("out of cert time")
-
-var ErrInvalidRepo = errors.New("invalid repo")
 
 func validate(cert tls.Certificate) error {
 	cur := time.Now()
@@ -62,31 +59,6 @@ func getCertNames(certpath, keypath string) ([]string, error) {
 		}
 		sort.Slice(names, func(i, j int) bool { return len(names[i]) < len(names[j]) })
 		return names, nil
-	}
-}
-
-func getRepo(path string) (string, error) {
-	if file, err := os.Open(path); err != nil {
-		return "", err
-	} else {
-		defer file.Close()
-		scanner := bufio.NewScanner(file)
-		scanner.Split(bufio.ScanLines)
-		for scanner.Scan() {
-			cur := strings.TrimSpace(scanner.Text())
-			if len(cur) == 0 {
-				continue
-			} else if strings.HasPrefix(cur, "#") {
-				continue
-			} else if u, err := url.Parse(cur); err != nil {
-				return "", err
-			} else if !strings.HasPrefix(u.Scheme, "http") || u.Host == "" {
-				return "", ErrInvalidRepo
-			} else {
-				return u.String(), nil
-			}
-		}
-		return "", nil
 	}
 }
 
@@ -139,14 +111,10 @@ func fetchCert(repo, version string) ([]byte, []byte, error) {
 	}
 }
 
-func updateCert(certpath, keypath, repopath, version string) error {
-	if repopath == "" || certpath == "" || keypath == "" {
+func updateCert(certpath, keypath, repo, version string) error {
+	if repo == "" || certpath == "" || keypath == "" {
 		return nil
 	} else if isValid(certpath, keypath) {
-		return nil
-	} else if repo, err := getRepo(repopath); err != nil {
-		return err
-	} else if repo == "" {
 		return nil
 	} else if certContent, keyContent, err := fetchCert(repo, version); err != nil {
 		return err

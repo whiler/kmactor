@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -21,85 +20,54 @@ import (
 )
 
 var (
-	normal        = "0.1.2"
+	normal        = "0.2.0"
 	preRelease    = "dev"
-	buildRevision string
+	buildRevision = "197001.0000000"
 
-	ver string
+	ver = fmt.Sprintf("%s-%s+%s", normal, preRelease, buildRevision)
 )
 
-func use(path string) string {
-	if info, err := os.Stat(path); err != nil || info.IsDir() {
-		return ""
-	} else {
-		return path
-	}
-}
-
 func main() {
-	var (
-		flagSet   = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-		port      int
-		token     string
-		cert, key string
-		logto     string
-		repo      string
-		version   bool
-		cli       bool
-	)
-
 	log.SetFlags(log.Ltime)
-
-	flagSet.IntVar(&port, "port", 9242, "local port")
-	flagSet.StringVar(&token, "token", "", "token")
-	flagSet.StringVar(&cert, "cert", use("cert.pem"), "cert file path")
-	flagSet.StringVar(&key, "key", use("key.pem"), "key file path")
-	flagSet.StringVar(&logto, "log", "kmactor.log", "log file path")
-	flagSet.StringVar(&repo, "repo", use("repo.txt"), "auto update cert from repo")
-	flagSet.BoolVar(&version, "version", false, "version")
-	flagSet.BoolVar(&cli, "cli", false, "cli mode")
-
-	if err := flagSet.Parse(os.Args[1:]); err != nil {
-		log.Println(err)
-	} else if version {
-		fmt.Println(ver)
-	} else if err = app.Initialize(cli); err != nil {
-		log.Println(err)
-	} else if closer, err := logging(logto); err != nil {
-		log.Println(err)
-	} else if 0 >= port || port >= 65536 {
-		log.Printf("invalid port: %d", port)
+	if err := app.Initialize(); err != nil {
+		log.Println(err.Error())
+	} else if cfg, err := loadConfig("config.json", 9242, "kmactor.log"); err != nil {
+		log.Println(err.Error())
+	} else if closer, err := logto(cfg.Log); err != nil {
+		log.Println(err.Error())
+	} else if 0 >= cfg.Port || cfg.Port >= 65536 {
+		log.Printf("invalid port: %d", cfg.Port)
 		closer.Close()
-	} else if (cert != "" && key == "") || (cert == "" && key != "") {
+	} else if (cfg.Cert != "" && cfg.Key == "") || (cfg.Cert == "" && cfg.Key != "") {
 		log.Println("cert and key are required at the same time")
 		closer.Close()
-	} else if err = updateCert(cert, key, repo, ver); err != nil {
-		log.Println(err)
+	} else if err = updateCert(cfg.Cert, cfg.Key, cfg.Repo, ver); err != nil {
+		log.Println(err.Error())
 		closer.Close()
-	} else if names, err := getCertNames(cert, key); err != nil {
-		log.Println(err)
+	} else if names, err := getCertNames(cfg.Cert, cfg.Key); err != nil {
+		log.Println(err.Error())
 		closer.Close()
-	} else if handler, err := kmactor.Build(ver, token); err != nil {
-		log.Println(err)
+	} else if handler, err := kmactor.Build(ver, cfg.Token); err != nil {
+		log.Println(err.Error())
 		closer.Close()
 	} else {
-		tls := cert != "" && key != ""
+		tls := cfg.Cert != "" && cfg.Key != ""
 		srv := &http.Server{
-			Addr:    fmt.Sprintf("localhost:%d", port),
+			Addr:    fmt.Sprintf("localhost:%d", cfg.Port),
 			Handler: h2c.NewHandler(handler, &http2.Server{}),
 		}
 
 		quit := make(chan struct{})
 		go func() {
 			defer close(quit)
-			var err error
+			var e error
 			if tls {
-				err = srv.ListenAndServeTLS(cert, key)
+				e = srv.ListenAndServeTLS(cfg.Cert, cfg.Key)
 			} else {
-				err = srv.ListenAndServe()
+				e = srv.ListenAndServe()
 			}
-			if err != nil && !errors.Is(err, http.ErrServerClosed) {
-				log.Printf("serve error: %v", err)
+			if e != nil && !errors.Is(e, http.ErrServerClosed) {
+				log.Printf("serve error: %s", e.Error())
 			}
 		}()
 
@@ -114,7 +82,7 @@ func main() {
 				proto = "https"
 			}
 			for _, name := range names {
-				log.Printf("serving at %s://%s:%d", ws, name, port)
+				log.Printf("serving at %s://%s:%d", ws, name, cfg.Port)
 			}
 
 			sig := make(chan os.Signal, 1)
@@ -123,41 +91,31 @@ func main() {
 				signal.Stop(sig)
 				close(sig)
 				ctx, cancel := context.WithTimeout(context.Background(), 13*time.Second)
-				if err := srv.Shutdown(ctx); err != nil {
-					log.Printf("shutdown error: %v", err)
+				if e := srv.Shutdown(ctx); e != nil {
+					log.Printf("shutdown error: %s", e.Error())
 				}
 				cancel()
 				log.Println("quit")
 				closer.Close()
 			}
-			if cli {
-				select {
-				case <-sig:
-				case <-quit:
-				}
-				clean()
-			} else {
-				tray(sig, quit, fmt.Sprintf("%s://%s:%d", proto, names[0], port), clean)
-			}
+			tray(sig, quit, fmt.Sprintf("%s://%s:%d", proto, names[0], cfg.Port), clean)
 		}
 	}
 }
 
-type dummp struct{}
-
-func (*dummp) Close() error { return nil }
-
-func logging(path string) (io.Closer, error) {
+func logto(path string) (io.Closer, error) {
 	if path == "-" {
 		return &dummp{}, nil
 	} else if file, err := os.Create(path); err != nil {
 		return nil, err
 	} else {
-		log.SetOutput(io.MultiWriter(log.Writer(), file))
+		log.SetOutput(file)
 		return file, nil
 	}
 }
 
-func init() {
-	ver = fmt.Sprintf("%s-%s+%s", normal, preRelease, buildRevision)
+type dummp struct{}
+
+func (*dummp) Close() error {
+	return nil
 }
