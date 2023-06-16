@@ -3,6 +3,15 @@
 
 // macOS App 运行时的工作路径是 `/` 。
 // 使用 `~/Library/Caches/kmactor` 作为工作路径，并将需要的资源文件复制到工作路径下。
+//
+// kmactor.app
+// └── Contents
+//        ├── Info.plist
+//        ├── MacOS
+//        │     └── kmactor
+//        └── Resources
+//               ├── config.json
+//               └── icon.icns
 
 package app
 
@@ -10,49 +19,47 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
-var files = []string{
-	"cert.pem",
-	"key.pem",
-	"repo.txt",
-}
-
-func Initialize(cli bool) error {
-	if cli {
-		return nil
-	} else if path, err := os.Executable(); err != nil {
+func Initialize() error {
+	if path, err := os.Executable(); err != nil {
 		return err
 	} else if cacheDir, err := os.UserCacheDir(); err != nil {
 		return err
 	} else {
-		contentsPath := filepath.Join(path, "../..")
-		base := filepath.Base(filepath.Join(contentsPath, ".."))
-		name := base[:strings.LastIndex(base, ".app")]
-		cachePath := filepath.Join(cacheDir, name)
+		cachePath := filepath.Join(cacheDir, filepath.Base(path))
+		resPath := filepath.Join(path, "../..", "Resources")
+		resOffset := len(resPath) + 1
 		if err = os.MkdirAll(cachePath, 0750); err != nil {
 			return err
 		} else if err = os.Chdir(cachePath); err != nil {
 			return err
 		} else {
-			for _, cur := range files {
-				src := filepath.Join(contentsPath, "Resources", cur)
-				dst := filepath.Join(cachePath, cur)
-				if !exists(src) || exists(dst) {
-					continue
-				} else if err = filecopy(dst, src); err != nil {
+			return filepath.Walk(resPath, func(src string, info os.FileInfo, err error) error {
+				if err != nil {
 					return err
+				} else if info.IsDir() {
+					return nil
+				} else {
+					res := src[resOffset:]
+					if ignores[res] {
+						return nil
+					} else {
+						dst := filepath.Join(cachePath, res)
+						if _, err = os.Stat(dst); err == nil {
+							return nil
+						} else {
+							return filecopy(dst, src)
+						}
+					}
 				}
-			}
-			return nil
+			})
 		}
 	}
 }
 
-func exists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
+var ignores = map[string]bool{
+	"icon.icns": true,
 }
 
 func filecopy(dst, src string) error {
