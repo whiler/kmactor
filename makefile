@@ -62,7 +62,9 @@ updep: go.mod
 	mv /tmp/go.mod go.mod
 	go mod tidy
 
-macapp: kmactor.app
-	zip bin/$(APP).zip -r kmactor.app
+macapp: kmactor.app bin/kmactor-darwin-amd64 bin/kmactor-darwin-arm64
+	lipo -create -output kmactor.app/Contents/MacOS/kmactor bin/kmactor-darwin-amd64 bin/kmactor-darwin-arm64
+	zip bin/kmactor.app.zip -r kmactor.app
+	rm bin/kmactor-darwin-amd64 bin/kmactor-darwin-arm64
 
 all: amd64 arm64
